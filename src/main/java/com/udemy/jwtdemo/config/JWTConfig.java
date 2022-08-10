@@ -10,8 +10,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.udemy.jwtdemo.filter.JWTAuthenticationFilter;
@@ -28,6 +27,9 @@ public class JWTConfig extends WebSecurityConfigurerAdapter {
 	
 	@Autowired
 	private JWTAuthenticationFilter jwtFilter;
+	
+	@Autowired
+	private JWTAuthEntryPoint jwtAuthEntryPoint;
 
 	// How we want to manage our authentication process
 	@Override
@@ -44,18 +46,25 @@ public class JWTConfig extends WebSecurityConfigurerAdapter {
 			.csrf().disable()
 			.cors().disable()
 			.authorizeRequests()
-			.antMatchers("/api/generateToken").permitAll()  // public endpoint
-			.anyRequest().authenticated()				    // any other request should perform authentication
-			.and()
-			.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // every request is independent from each other
+			.antMatchers("/api/login", "/api/register", "/h2-console/**").permitAll()
+			.antMatchers("/hello").hasAnyRole("ADMIN", "PROFESOR")
+			.antMatchers("/hello2").hasAnyAuthority("ROLE_ADMIN", "ROLE_TUTOR", "ROLE_ESTUDIANTE")
+			.anyRequest().authenticated()
+			.and().exceptionHandling().authenticationEntryPoint(jwtAuthEntryPoint)
+			.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // every request is independent from each other
 		
 		http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 	}
 	
 	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return NoOpPasswordEncoder.getInstance();
+	public BCryptPasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
 	}
+	
+//	@Bean
+//	public PasswordEncoder passwordEncoder() {
+//		return NoOpPasswordEncoder.getInstance();
+//	}
 	
 	@Bean
 	public AuthenticationManager authenticationManagerBean() throws Exception {

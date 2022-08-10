@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.udemy.jwtdemo.bean.CustomUserDetails;
+import com.udemy.jwtdemo.bean.CustomUserDetailsV2;
 import com.udemy.jwtdemo.model.JWTRequest;
 import com.udemy.jwtdemo.model.JWTResponse;
 import com.udemy.jwtdemo.service.CustomUserDetailsService;
@@ -33,7 +33,7 @@ public class JWTController {
 	@Autowired
 	private JWTUtil jwtUtil;
 	
-	@PostMapping("/generateToken")
+	@PostMapping("/login")
 	public ResponseEntity<?> generateToken(@RequestBody JWTRequest jwtRequest) {
 		logger.info("generateToken");
 		logger.info(jwtRequest.toString());
@@ -42,8 +42,11 @@ public class JWTController {
 		UsernamePasswordAuthenticationToken upat = new UsernamePasswordAuthenticationToken(jwtRequest.getUsername(), jwtRequest.getPassword());
 		authenticationManager.authenticate(upat);
 		
-		CustomUserDetails userDetails = customUserDetailsService.loadUserByUsername(jwtRequest.getUsername());
-		String token = jwtUtil.generateToken(userDetails);
+		// CustomUserDetails userDetails = customUserDetailsService.loadUserByUsernameV1(jwtRequest.getUsername());
+		// String token = jwtUtil.generateTokenV1(userDetails);
+		
+		CustomUserDetailsV2 userDetailsV2 = customUserDetailsService.loadUserByUsername(jwtRequest.getUsername());
+		String token = jwtUtil.generateTokenV2(userDetailsV2);
 		
 		JWTResponse jwtResponse = new JWTResponse(token);
 		logger.info(jwtResponse.toString());

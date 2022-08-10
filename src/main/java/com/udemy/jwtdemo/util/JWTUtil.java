@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import com.udemy.jwtdemo.bean.CustomUserDetails;
+import com.udemy.jwtdemo.bean.CustomUserDetailsV2;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,6 +25,9 @@ public class JWTUtil {
 
 	@Value("${jwt.secret}")
 	private String SECRET_KEY;
+	
+	@Value("${jwt.token.expirationInHours}")
+	private Integer TOKEN_EXPIRATION_HOURS;
 
 	public String extractUsername(String token) {
 		logger.info("extractUsername");
@@ -49,9 +52,18 @@ public class JWTUtil {
 		return extractExpiration(token).before(new Date());
 	}
 
-	public String generateToken(CustomUserDetails userDetails) {
-		logger.info("generateToken");
+//	public String generateTokenV1(CustomUserDetails userDetails) {
+//		logger.info("generateTokenV1");
+//		Map<String, Object> claims = new HashMap<>();
+//		claims.put("profile", userDetails.getProfile());
+//		claims.put("permissions", userDetails.getAuthorities());
+//		return createToken(claims, userDetails.getUsername());
+//	}
+	
+	public String generateTokenV2(CustomUserDetailsV2 userDetails) {
+		logger.info("generateTokenV2");
 		Map<String, Object> claims = new HashMap<>();
+		claims.put("email", userDetails.getEmail());
 		claims.put("profile", userDetails.getProfile());
 		claims.put("permissions", userDetails.getAuthorities());
 		return createToken(claims, userDetails.getUsername());
@@ -63,9 +75,11 @@ public class JWTUtil {
 	//                  1m * 60 = 1h
 	//                            1h * 10 = 10h
 	private String createToken(Map<String, Object> claims, String subject) {
+		logger.info("createToken");
+		logger.info("TOKEN_EXPIRATION_HOURS: " + TOKEN_EXPIRATION_HOURS);
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		long now = System.currentTimeMillis();
-		long extramilis = 1000 * 60 * 60 * 10;
+		long extramilis = 1000 * 60 * 60 * TOKEN_EXPIRATION_HOURS;
 		Date issuedAt = new Date(now);
 		Date expiration = new Date(now + extramilis);
 		logger.info("issuedAt: " + sdf.format(issuedAt));
